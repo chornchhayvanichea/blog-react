@@ -23,14 +23,33 @@ const AppHeader = ({ darkMode }) => {
 
   // AntD v5 Dropdown menu items
   const menuItems = [
-    { key: "1", label: "Write a blog" },
-    { key: "2", label: "Profile" },
-    { key: "3", label: <Link to={ROUTES.LOGIN}>Logout</Link> },
+    {
+      key: "1",
+      label: <Link to={ROUTES.WRITE_BLOG}>Write a blog</Link>,
+    },
+    {
+      key: "2",
+      label: <Link to={ROUTES.PROFILE}>Profile</Link>,
+    },
+    {
+      key: "3",
+      label: <Link to={ROUTES.LOGIN}>Logout</Link>,
+    },
+  ];
+
+  // Mobile menu items (when hamburger is shown)
+  const mobileMenuItems = [
+    {
+      key: "search",
+      label: "Search",
+    },
+    ...menuItems,
   ];
 
   return (
     <Header
       style={{
+        border: "1px solid #f0f1f5",
         backgroundColor: token.colorBgContainer,
         padding: "0 16px",
         display: "flex",
@@ -49,13 +68,29 @@ const AppHeader = ({ darkMode }) => {
           style={{ maxWidth: 300 }}
         />
       ) : (
-        <Dropdown menu={{ items: menuItems }} trigger={["click"]}>
+        <Dropdown menu={{ items: mobileMenuItems }} trigger={["click"]}>
           <Button icon={<MenuOutlined />} />
         </Dropdown>
       )}
+
       <Space size="middle">
-        {screens.sm && <Button type="default" icon={<EditOutlined />} />}
-        <Avatar size="large" src="/profile.jpg" style={{ cursor: "pointer" }} />
+        {screens.sm && (
+          <Link to={ROUTES.WRITE_BLOG}>
+            <Button type="default" icon={<EditOutlined />} />
+          </Link>
+        )}
+
+        <Dropdown
+          menu={{ items: menuItems }}
+          trigger={["click"]}
+          placement="bottomRight"
+        >
+          <Avatar
+            size="large"
+            src="/profile.jpg"
+            style={{ cursor: "pointer" }}
+          />
+        </Dropdown>
       </Space>
     </Header>
   );

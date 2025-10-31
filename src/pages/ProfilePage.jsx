@@ -94,7 +94,7 @@ const ProfilePage = () => {
       style={{
         minHeight: "100vh",
         padding: "32px 20px",
-        maxWidth: "900px",
+        maxWidth: "2000px",
         margin: "0 auto",
       }}
     >
@@ -153,28 +153,24 @@ const ProfilePage = () => {
                       >
                         Edit Profile
                       </Button>
-                      <Button
-                        icon={<SettingOutlined />}
-                        size="large"
-                        style={{ borderRadius: 8 }}
-                      >
-                        Settings
-                      </Button>
                     </Space>
                   </Space>
                 </Col>
               </Row>
 
               {/* Stats */}
+
               <Row
                 gutter={[24, 24]}
                 style={{
                   marginTop: 40,
                   paddingTop: 32,
                   borderTop: "1px solid #f0f0f0",
+                  textAlign: "center",
                 }}
+                justify="space-around"
               >
-                <Col xs={8} sm={8} md={4}>
+                <Col xs={24} sm={8} md={8}>
                   <Space
                     direction="vertical"
                     size={4}
@@ -188,35 +184,8 @@ const ProfilePage = () => {
                     </Text>
                   </Space>
                 </Col>
-                <Col xs={8} sm={8} md={4}>
-                  <Space
-                    direction="vertical"
-                    size={4}
-                    style={{ width: "100%" }}
-                  >
-                    <Text strong style={{ fontSize: 24 }}>
-                      {userInfo.followers}
-                    </Text>
-                    <Text type="secondary" style={{ fontSize: 13 }}>
-                      Followers
-                    </Text>
-                  </Space>
-                </Col>
-                <Col xs={8} sm={8} md={4}>
-                  <Space
-                    direction="vertical"
-                    size={4}
-                    style={{ width: "100%" }}
-                  >
-                    <Text strong style={{ fontSize: 24 }}>
-                      {userInfo.following}
-                    </Text>
-                    <Text type="secondary" style={{ fontSize: 13 }}>
-                      Following
-                    </Text>
-                  </Space>
-                </Col>
-                <Col xs={12} sm={12} md={6}>
+
+                <Col xs={24} sm={8} md={8}>
                   <Space
                     direction="vertical"
                     size={4}
@@ -230,7 +199,8 @@ const ProfilePage = () => {
                     </Text>
                   </Space>
                 </Col>
-                <Col xs={12} sm={12} md={6}>
+
+                <Col xs={24} sm={8} md={8}>
                   <Space
                     direction="vertical"
                     size={4}
@@ -250,7 +220,7 @@ const ProfilePage = () => {
             <Divider />
 
             {/* Sub Navigation */}
-            <div style={{ display: "flex", justifyContent: "center" }}>
+            <div style={{ display: "flex" }}>
               <Segmented
                 value={activeTab}
                 onChange={setActiveTab}

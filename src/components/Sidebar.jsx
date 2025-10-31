@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, Links, useLocation } from "react-router-dom";
 import {
   HomeOutlined,
   UserOutlined,
@@ -11,13 +11,18 @@ import {
   FlagOutlined,
   LineChartOutlined,
   ReadOutlined,
+  RadarChartOutlined,
+  ManOutlined,
+  TeamOutlined,
+  ProfileOutlined,
+  DashboardOutlined,
 } from "@ant-design/icons";
-import { Layout, Menu, Button } from "antd";
+import { Layout, Menu, Button, Typography } from "antd";
 import { ROUTES } from "../constants/routes";
 import { useAuth } from "../contexts/AuthContext";
 
 const { Sider } = Layout;
-
+const { Title } = Typography;
 const Sidebar = ({ darkMode }) => {
   const [collapsed, setCollapsed] = useState(window.innerWidth < 768);
   const location = useLocation();
@@ -47,6 +52,11 @@ const Sidebar = ({ darkMode }) => {
       label: <Link to={ROUTES.PROFILE}>Profile</Link>,
     },
     {
+      key: ROUTES.CURRENT_USER_POSTS,
+      icon: <ReadOutlined />,
+      label: <Link to={ROUTES.CURRENT_USER_POSTS}>My Posts</Link>,
+    },
+    {
       type: "divider",
     },
     {
@@ -54,28 +64,50 @@ const Sidebar = ({ darkMode }) => {
       icon: <SettingOutlined />,
       label: <Link to={ROUTES.SETTINGS}>Settings</Link>,
     },
-  ];
-
-  if (user?.role === "admin") {
-    items.push({
-      key: "admin-panel",
+    {
+      key: ROUTES.ADMIN_DASHBORD,
       icon: <ToolOutlined />,
       label: "Admin Panel",
       children: [
-        //        {
-        //          key: ROUTES.ADMIN_DASHBORD,
-        //          icon: <LineChartOutlined />,
-        //          label: <Link to={ROUTES.ADMIN_DASHBORD}>Statistic</Link>,
-        //        },
+        {
+          key: ROUTES.ADMIN_DASHBORD,
+          icon: <LineChartOutlined />,
+          label: <Link to={ROUTES.ADMIN_DASHBORD}>Dashboard</Link>,
+        },
+        {
+          key: ROUTES.ADMIN_USERS,
+          icon: <TeamOutlined />,
+          label: <Link to={ROUTES.ADMIN_USERS}>Manage Users</Link>,
+        },
         {
           key: ROUTES.ADMIN_REPORTS,
           icon: <FlagOutlined />,
-          label: <Link to={ROUTES.ADMIN_REPORTS}>Report List</Link>,
+          label: <Link to={ROUTES.ADMIN_REPORTS}>Reports List</Link>,
         },
       ],
-    });
-  }
+    },
+  ];
 
+  //  if (user?.role === "admin") {
+  //    items.push({
+  //      key: "admin-panel",
+  //      icon: <ToolOutlined />,
+  //      label: "Admin Panel",
+  //      children: [
+  //        {
+  //          key: ROUTES.ADMIN_DASHBORD,
+  //          icon: <LineChartOutlined />,
+  //          label: <Link to={ROUTES.ADMIN_DASHBORD}>Statistic</Link>,
+  //        },
+  //        {
+  //          key: ROUTES.ADMIN_REPORTS,
+  //          icon: <FlagOutlined />,
+  //          label: <Link to={ROUTES.ADMIN_REPORTS}>Report List</Link>,
+  //        },
+  //      ],
+  //    });
+  //  }
+  //
   return (
     <Sider
       style={{
@@ -83,6 +115,7 @@ const Sidebar = ({ darkMode }) => {
         top: 0,
         height: "100vh",
         overflow: "auto",
+        border: "1px solid #f0f2f5",
       }}
       collapsible
       collapsed={collapsed}
@@ -98,7 +131,15 @@ const Sidebar = ({ darkMode }) => {
           collapsed ? "justify-center" : "justify-between"
         } px-3 mt-4 mb-5`}
       >
-        {!collapsed && <img src="" alt="Logo" className="h-8 w-auto" />}
+        {!collapsed && (
+          <Title level={3} style={{ marginLeft: 20, color: "#1890ff" }}>
+            Blog
+          </Title>
+        )}
+        {/*
+ <img src="" alt="Logo" className="h-8 w-auto" />
+
+        */}
         <Button
           type="text"
           onClick={() => setCollapsed(!collapsed)}

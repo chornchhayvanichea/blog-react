@@ -17,7 +17,7 @@ function AppContent() {
           colorBgBase: darkMode ? "#141414" : "#ffffff",
           colorBgContainer: darkMode ? "#1f1f1f" : "#ffffff",
           colorBgElevated: darkMode ? "#262626" : "#ffffff",
-          colorBgLayout: darkMode ? "#0a0a0a" : "#f0f2f5",
+          colorBgLayout: darkMode ? "#0a0a0a" : "#ffffff",
           colorBorder: darkMode ? "#434343" : "#d9d9d9",
           colorBorderSecondary: darkMode ? "#303030" : "#f0f0f0",
           colorText: darkMode

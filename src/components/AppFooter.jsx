@@ -15,7 +15,8 @@ export default function AppFooter() {
       }}
     >
       <p className="text-gray-500">
-        © {new Date().getFullYear()} My Blog. All rights reserved.
+        TechBlog ©{new Date().getFullYear()} Sharing Knowledge, Building the
+        future.
       </p>
     </Footer>
   );

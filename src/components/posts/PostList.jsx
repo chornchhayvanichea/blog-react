@@ -1,7 +1,8 @@
 import React from "react";
-import { Card } from "antd";
+import { Card, Typography, Space } from "antd";
 import PostCard from "./PostCard";
 
+const { Title, Text } = Typography;
 const PostList = () => {
   const samplePosts = [
     {
@@ -77,26 +78,102 @@ const PostList = () => {
       likes: 312,
       comments: 28,
     },
-  ];
+    {
+      id: 5,
+      title: "Mastering CSS Grid",
+      excerpt:
+        "CSS Grid has changed the game for web layouts. Discover how to create responsive, flexible designs without the headaches of traditional CSS.",
+      author: "Lisa Anderson",
+      authorAvatar: "https://i.pravatar.cc/150?img=9",
+      publishDate: "Oct 10, 2025",
+      readTime: "7 min",
+      tags: ["CSS", "Web Design"],
+      coverImage:
+        "https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?w=400&h=300&fit=crop",
+      likes: 312,
+      comments: 28,
+    },
+    {
+      id: 5,
+      title: "Mastering CSS Grid",
+      excerpt:
+        "CSS Grid has changed the game for web layouts. Discover how to create responsive, flexible designs without the headaches of traditional CSS.",
+      author: "Lisa Anderson",
+      authorAvatar: "https://i.pravatar.cc/150?img=9",
+      publishDate: "Oct 10, 2025",
+      readTime: "7 min",
+      tags: ["CSS", "Web Design"],
+      coverImage:
+        "https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?w=400&h=300&fit=crop",
+      likes: 312,
+      comments: 28,
+    },
 
-  return (
-    <Card
-      style={{
-        borderRadius: 12,
-        border: "1px solid #e8e8e8",
+    {
+      id: 5,
+      title: "Mastering CSS Grid",
+      excerpt:
+        "CSS Grid has changed the game for web layouts. Discover how to create responsive, flexible designs without the headaches of traditional CSS.",
+      author: "Lisa Anderson",
+      authorAvatar: "https://i.pravatar.cc/150?img=9",
+      publishDate: "Oct 10, 2025",
+      readTime: "7 min",
+      tags: ["CSS", "Web Design"],
+      coverImage:
+        "https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?w=400&h=300&fit=crop",
+      likes: 312,
+      comments: 28,
+    },
+
+    {
+      id: 5,
+      title: "Mastering CSS Grid",
+      excerpt:
+        "CSS Grid has changed the game for web layouts. Discover how to create responsive, flexible designs without the headaches of traditional CSS.",
+      author: "Lisa Anderson",
+      authorAvatar: "https://i.pravatar.cc/150?img=9",
+      publishDate: "Oct 10, 2025",
+      readTime: "7 min",
+      tags: ["CSS", "Web Design"],
+      coverImage:
+        "https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?w=400&h=300&fit=crop",
+      likes: 312,
+      comments: 28,
+      bookmarks: 30,
+    },
+  ];
+  {
+    /*
+
         boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-      }}
-      bodyStyle={{ padding: "0 24px" }}
-    >
-      {samplePosts.map((post, index) => (
-        <PostCard
-          key={post.id}
-          {...post}
-          isLast={index === samplePosts.length - 1}
-          onClick={() => console.log("Clicked post:", post.id)}
-        />
-      ))}
-    </Card>
+*/
+  }
+  return (
+    <>
+      <Title>Share Your Thoughts</Title>
+      <Text style={{ color: "grey" }}>
+        Explore posts, bookmark favorites and join the conversation.
+      </Text>
+      <Card
+        style={{
+          borderRadius: 0,
+          border: "1px solid #e8e8e8",
+          marginTop: 10,
+        }}
+        bodyStyle={{ padding: "24px" }}
+      >
+        {samplePosts.map((post, index) => (
+          <PostCard
+            key={post.id}
+            {...post}
+            isLast={index === samplePosts.length - 1}
+            onClick={() => console.log("Clicked post:", post.id)}
+            onLike={(liked) => console.log("Liked:", liked)}
+            onComment={() => console.log("Comment clicked")}
+          />
+        ))}
+      </Card>
+    </>
   );
 };
 

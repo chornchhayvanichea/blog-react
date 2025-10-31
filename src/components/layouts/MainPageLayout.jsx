@@ -20,7 +20,7 @@ const MainPageLayout = ({ children }) => {
           style={{
             padding: "24px",
             minHeight: 360,
-            color: "#fff",
+            color: "#ffffff",
           }}
         >
           {children}

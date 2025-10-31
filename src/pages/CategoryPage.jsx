@@ -25,8 +25,16 @@ const CategoryPage = () => {
   ];
 
   return (
-    <Space direction="vertical" size={24} style={{ width: "100%" }}>
-      {/* Categories Card */}
+    <Space
+      direction="vertical"
+      size={24}
+      style={{
+        width: "100%",
+        position: "sticky",
+        top: "20px",
+        marginTop: 100,
+      }}
+    >
       <Card
         style={{
           borderRadius: 12,
@@ -79,15 +87,15 @@ const CategoryPage = () => {
           </Space>
         </Space>
       </Card>
-
-      {/* Trending Topics Card */}
-      <Card
+      {/*
+   <Card
         style={{
           borderRadius: 12,
           border: "1px solid #e8e8e8",
           boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
         }}
       >
+
         <Space direction="vertical" size={16} style={{ width: "100%" }}>
           <Space align="center" size={8}>
             <FireOutlined style={{ fontSize: 18, color: "#ff6b6b" }} />
@@ -124,7 +132,8 @@ const CategoryPage = () => {
         </Space>
       </Card>
 
-      {/* Recommended Card */}
+    
+    */}
       <Card
         style={{
           borderRadius: 12,

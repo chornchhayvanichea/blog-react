@@ -165,6 +165,11 @@ const SignupForm = () => {
               </Form.Item>
 
               <Form.Item
+                label={
+                  <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                    Username
+                  </span>
+                }
                 name="username"
                 rules={[
                   { required: true, message: "Please input your Username!" },
@@ -186,6 +191,11 @@ const SignupForm = () => {
               </Form.Item>
 
               <Form.Item
+                label={
+                  <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                    Password
+                  </span>
+                }
                 name="password"
                 rules={[
                   { required: true, message: "Please input your Password!" },
@@ -207,6 +217,11 @@ const SignupForm = () => {
               </Form.Item>
 
               <Form.Item
+                label={
+                  <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                    Confirm Password
+                  </span>
+                }
                 name="confirmPassword"
                 dependencies={["password"]}
                 rules={[

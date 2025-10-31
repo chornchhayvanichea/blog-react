@@ -12,9 +12,11 @@ import {
   Card,
   Avatar,
   Dropdown,
+  Statistic,
+  Progress,
 } from "antd";
 import {
-  FlagTwoTone,
+  FlagOutlined,
   SearchOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
@@ -24,6 +26,9 @@ import {
   EyeOutlined,
   DeleteOutlined,
   CheckOutlined,
+  WarningOutlined,
+  ExclamationCircleOutlined,
+  FireOutlined,
 } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
@@ -91,7 +96,6 @@ const ReportCard = ({ report, onAction }) => {
         borderRadius: 12,
         border: "1px solid #f0f0f0",
         transition: "all 0.3s ease",
-        cursor: "pointer",
       }}
       hoverable
       bodyStyle={{ padding: "20px 24px" }}
@@ -164,10 +168,11 @@ const ReportCard = ({ report, onAction }) => {
             {report.targetContent && (
               <div
                 style={{
-                  //      background: "#f5f5f5",
+                  background: "#fafafa",
                   padding: "12px",
                   borderRadius: 8,
                   marginTop: 8,
+                  borderLeft: "3px solid #d9d9d9",
                 }}
               >
                 <Text
@@ -290,156 +295,334 @@ const AdminReportsPage = () => {
 
   const handleAction = (reportId, action) => {
     console.log(`Action: ${action} on report ${reportId}`);
-    // Implement action logic here
   };
 
-  const getPendingCount = () =>
-    allReports.filter((r) => r.status === "pending").length;
+  // Statistics
+  const stats = {
+    total: allReports.length,
+    pending: allReports.filter((r) => r.status === "pending").length,
+    resolved: allReports.filter((r) => r.status === "resolved").length,
+    dismissed: allReports.filter((r) => r.status === "dismissed").length,
+    highSeverity: allReports.filter(
+      (r) => r.severity === "high" && r.status === "pending",
+    ).length,
+  };
+
+  const resolutionRate =
+    stats.total > 0 ? ((stats.resolved / stats.total) * 100).toFixed(1) : 0;
+
+  // Report categories breakdown
+  const reportCategories = [
+    {
+      name: "Spam",
+      count: allReports.filter((r) => r.reason.includes("Spam")).length,
+      color: "#ff4d4f",
+    },
+    {
+      name: "Harassment",
+      count: allReports.filter((r) => r.reason.includes("Harassment")).length,
+      color: "#ff7a45",
+    },
+    {
+      name: "Misinformation",
+      count: allReports.filter((r) => r.reason.includes("Misinformation"))
+        .length,
+      color: "#faad14",
+    },
+    {
+      name: "Copyright",
+      count: allReports.filter((r) => r.reason.includes("Copyright")).length,
+      color: "#1890ff",
+    },
+    {
+      name: "Other",
+      count: allReports.filter(
+        (r) =>
+          !r.reason.includes("Spam") &&
+          !r.reason.includes("Harassment") &&
+          !r.reason.includes("Misinformation") &&
+          !r.reason.includes("Copyright"),
+      ).length,
+      color: "#52c41a",
+    },
+  ];
 
   return (
     <div
       style={{
         minHeight: "100vh",
-        padding: "32px 20px",
-        maxWidth: "1000px",
-        margin: "0 auto",
+        padding: "24px 20px",
+        background: "#ffffff",
       }}
     >
-      <Row justify="center">
-        <Col xs={24} sm={24} md={22} lg={20} xl={18}>
-          <Space direction="vertical" size={32} style={{ width: "100%" }}>
-            {/* Header */}
-            <div style={{ paddingTop: 20 }}>
-              <Space align="center" size={12} style={{ marginBottom: 8 }}>
-                <FlagTwoTone
-                  twoToneColor="#ff4d4f"
-                  style={{
-                    fontSize: 36,
-                  }}
+      <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+        <Space direction="vertical" size={24} style={{ width: "100%" }}>
+          {/* Header */}
+          <div>
+            <Title level={2} style={{ marginBottom: 8 }}>
+              Content Reports
+            </Title>
+            <Text type="secondary" style={{ fontSize: 15 }}>
+              Manage and review reported content
+            </Text>
+          </div>
+
+          {/* Statistics Cards */}
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={12} md={6}>
+              <Card>
+                <Statistic
+                  title="Total Reports"
+                  value={stats.total}
+                  prefix={<FlagOutlined />}
+                  valueStyle={{ color: "#1890ff" }}
                 />
-                <Title
-                  level={1}
-                  style={{
-                    fontWeight: 700,
-                    fontSize: 36,
-                    margin: 0,
-                    background:
-                      "linear-gradient(135deg, #ff4d4f 0%, #ff7a45 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                  }}
-                >
-                  Content Reports
-                </Title>
-              </Space>
-              <Row>
-                <Text style={{ fontSize: 15, color: "#666" }}>
-                  Manage and review reported content
-                  {getPendingCount() > 0 && (
-                    <Tag color="orange" style={{ marginLeft: 8 }}>
-                      {getPendingCount()} pending
-                    </Tag>
-                  )}
-                </Text>
-              </Row>
-            </div>
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Card>
+                <Statistic
+                  title="Pending"
+                  value={stats.pending}
+                  prefix={<ClockCircleOutlined />}
+                  valueStyle={{ color: "#faad14" }}
+                />
+                {stats.highSeverity > 0 && (
+                  <Space style={{ marginTop: 8 }}>
+                    <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />
+                    <Text style={{ fontSize: 12, color: "#ff4d4f" }}>
+                      {stats.highSeverity} high priority
+                    </Text>
+                  </Space>
+                )}
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Card>
+                <Statistic
+                  title="Resolved"
+                  value={stats.resolved}
+                  prefix={<CheckCircleOutlined />}
+                  valueStyle={{ color: "#52c41a" }}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Card>
+                <Statistic
+                  title="Resolution Rate"
+                  value={resolutionRate}
+                  suffix="%"
+                  prefix={<FireOutlined />}
+                  valueStyle={{ color: "#722ed1" }}
+                />
+              </Card>
+            </Col>
+          </Row>
 
-            {/* Search */}
-            <Input
-              placeholder="Search reports by reason, description, or reporter..."
-              prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
-              size="large"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                borderRadius: 8,
-              }}
-            />
-
-            {/* Tab Navigation */}
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <Segmented
-                value={activeTab}
-                onChange={setActiveTab}
-                size="large"
-                options={[
-                  {
-                    label: (
-                      <Space>
-                        <ClockCircleOutlined />
-                        <span>Pending</span>
-                        {getPendingCount() > 0 && (
-                          <Tag
-                            color="orange"
-                            style={{ margin: 0, fontSize: 11 }}
-                          >
-                            {getPendingCount()}
-                          </Tag>
-                        )}
-                      </Space>
-                    ),
-                    value: "pending",
-                  },
-                  {
-                    label: (
-                      <Space>
-                        <CheckCircleOutlined />
-                        <span>Resolved</span>
-                      </Space>
-                    ),
-                    value: "resolved",
-                  },
-                  {
-                    label: (
-                      <Space>
-                        <CloseCircleOutlined />
-                        <span>Dismissed</span>
-                      </Space>
-                    ),
-                    value: "dismissed",
-                  },
-                ]}
-                style={{
-                  padding: 4,
-                  borderRadius: 8,
-                }}
-              />
-            </div>
-
+          <Row gutter={[16, 16]}>
             {/* Reports List */}
-            <div>
-              {filteredReports.length > 0 ? (
-                filteredReports.map((report) => (
-                  <ReportCard
-                    key={report.id}
-                    report={report}
-                    onAction={handleAction}
-                  />
-                ))
-              ) : (
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={
-                    <Space direction="vertical" size={8}>
-                      <Text style={{ fontSize: 16, color: "#999" }}>
-                        No {activeTab} reports
-                        {searchQuery && " matching your search"}
-                      </Text>
-                      <Text type="secondary" style={{ fontSize: 14 }}>
-                        {activeTab === "pending"
-                          ? "All reports have been reviewed"
-                          : `No ${activeTab} reports found`}
-                      </Text>
-                    </Space>
-                  }
-                  style={{ marginTop: 60 }}
+            <Col xs={24} lg={16}>
+              <Card>
+                {/* Search */}
+                <Input
+                  placeholder="Search reports by reason, description, or reporter..."
+                  prefix={<SearchOutlined style={{ color: "#bfbfbf" }} />}
+                  size="large"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    borderRadius: 8,
+                    marginBottom: 16,
+                  }}
                 />
-              )}
-            </div>
-          </Space>
-        </Col>
-      </Row>
+
+                {/* Tab Navigation */}
+                <div style={{ marginBottom: 24 }}>
+                  <Segmented
+                    value={activeTab}
+                    onChange={setActiveTab}
+                    block
+                    options={[
+                      {
+                        label: (
+                          <Space>
+                            <ClockCircleOutlined />
+                            <span>Pending</span>
+                            {stats.pending > 0 && (
+                              <Tag
+                                color="orange"
+                                style={{ margin: 0, fontSize: 11 }}
+                              >
+                                {stats.pending}
+                              </Tag>
+                            )}
+                          </Space>
+                        ),
+                        value: "pending",
+                      },
+                      {
+                        label: (
+                          <Space>
+                            <CheckCircleOutlined />
+                            <span>Resolved</span>
+                          </Space>
+                        ),
+                        value: "resolved",
+                      },
+                      {
+                        label: (
+                          <Space>
+                            <CloseCircleOutlined />
+                            <span>Dismissed</span>
+                          </Space>
+                        ),
+                        value: "dismissed",
+                      },
+                    ]}
+                  />
+                </div>
+
+                {/* Reports List */}
+                <div style={{ maxHeight: "800px", overflowY: "auto" }}>
+                  {filteredReports.length > 0 ? (
+                    filteredReports.map((report) => (
+                      <ReportCard
+                        key={report.id}
+                        report={report}
+                        onAction={handleAction}
+                      />
+                    ))
+                  ) : (
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description={
+                        <Space direction="vertical" size={8}>
+                          <Text style={{ fontSize: 16, color: "#999" }}>
+                            No {activeTab} reports
+                            {searchQuery && " matching your search"}
+                          </Text>
+                          <Text type="secondary" style={{ fontSize: 14 }}>
+                            {activeTab === "pending"
+                              ? "All reports have been reviewed"
+                              : `No ${activeTab} reports found`}
+                          </Text>
+                        </Space>
+                      }
+                      style={{ marginTop: 60, marginBottom: 60 }}
+                    />
+                  )}
+                </div>
+              </Card>
+            </Col>
+
+            {/* Report Categories Sidebar */}
+            <Col xs={24} lg={8}>
+              <Card title={<Text strong>Report Categories</Text>}>
+                <Space direction="vertical" size={16} style={{ width: "100%" }}>
+                  {reportCategories.map((category) => (
+                    <div key={category.name}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <Text strong>{category.name}</Text>
+                        <Text type="secondary">{category.count} reports</Text>
+                      </div>
+                      <Progress
+                        percent={(category.count / stats.total) * 100}
+                        strokeColor={category.color}
+                        showInfo={false}
+                      />
+                    </div>
+                  ))}
+                </Space>
+              </Card>
+
+              <Card
+                title={<Text strong>Quick Actions</Text>}
+                style={{ marginTop: 16 }}
+              >
+                <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                  <Button
+                    block
+                    icon={<WarningOutlined />}
+                    danger={stats.highSeverity > 0}
+                    type={stats.highSeverity > 0 ? "primary" : "default"}
+                  >
+                    Review High Priority ({stats.highSeverity})
+                  </Button>
+                  <Button block icon={<CheckCircleOutlined />}>
+                    Bulk Resolve
+                  </Button>
+                  <Button block icon={<DeleteOutlined />}>
+                    Clear Dismissed
+                  </Button>
+                </Space>
+              </Card>
+
+              <Card
+                title={<Text strong>Recent Activity</Text>}
+                style={{ marginTop: 16 }}
+              >
+                <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                  <div>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      Today
+                    </Text>
+                    <div style={{ marginTop: 4 }}>
+                      <Text strong style={{ fontSize: 20 }}>
+                        3
+                      </Text>
+                      <Text
+                        type="secondary"
+                        style={{ marginLeft: 8, fontSize: 12 }}
+                      >
+                        new reports
+                      </Text>
+                    </div>
+                  </div>
+                  <div>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      This Week
+                    </Text>
+                    <div style={{ marginTop: 4 }}>
+                      <Text strong style={{ fontSize: 20 }}>
+                        12
+                      </Text>
+                      <Text
+                        type="secondary"
+                        style={{ marginLeft: 8, fontSize: 12 }}
+                      >
+                        reports resolved
+                      </Text>
+                    </div>
+                  </div>
+                  <div>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      Avg. Response Time
+                    </Text>
+                    <div style={{ marginTop: 4 }}>
+                      <Text strong style={{ fontSize: 20 }}>
+                        2.5h
+                      </Text>
+                      <Text
+                        type="secondary"
+                        style={{ marginLeft: 8, fontSize: 12 }}
+                      >
+                        ↓ 20% faster
+                      </Text>
+                    </div>
+                  </div>
+                </Space>
+              </Card>
+            </Col>
+          </Row>
+        </Space>
+      </div>
     </div>
   );
 };

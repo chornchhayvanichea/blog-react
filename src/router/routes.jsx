@@ -13,6 +13,10 @@ import ReportListPage from "../pages/admin/ReportsListPage";
 import SettingPages from "../pages/SettingsPage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import BookmarksPage from "../pages/BookmarksPage";
+import PostDetailPage from "../pages/posts/PostDetailPage";
+import UserPostListPage from "../pages/posts/UserPostsList";
+import ManageUsersPage from "../pages/admin/ManageUsersPage";
+import CreatePostPage from "../pages/posts/CreatePostPage";
 
 const routes = createBrowserRouter([
   {
@@ -41,29 +45,43 @@ const routes = createBrowserRouter([
       },
       // Protected routes (require login only)
       {
-        element: <ProtectedRoute />,
         children: [
           {
             path: ROUTES.BOOKMARK,
             element: <BookmarksPage />,
           },
           {
+            path: ROUTES.CREATE_POST,
+            element: <CreatePostPage />,
+          },
+          {
             path: ROUTES.PROFILE,
             element: <ProfilePage />,
+          },
+          {
+            path: ROUTES.CURRENT_USER_POSTS,
+            element: <UserPostListPage />,
           },
           {
             path: ROUTES.SETTINGS,
             element: <SettingPages />,
           },
+          {
+            path: "/PostDetailPage",
+            element: <PostDetailPage />,
+          },
         ],
       },
       // Admin routes (require admin role)
       {
-        element: <ProtectedRoute requireAdmin />,
         children: [
           {
-            path: ROUTES.ADMIN_DASHBOARD,
+            path: ROUTES.ADMIN_DASHBORD,
             element: <AdminDashboard />,
+          },
+          {
+            path: ROUTES.ADMIN_USERS,
+            element: <ManageUsersPage />,
           },
           {
             path: ROUTES.ADMIN_REPORTS,

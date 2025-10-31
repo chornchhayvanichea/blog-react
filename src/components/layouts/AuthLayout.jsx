@@ -3,9 +3,9 @@ import { Outlet } from "react-router-dom";
 
 const AuthLayout = ({ children }) => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-cyan-200 via-blue-300 to-purple-400 p-4">
-      {/* Centered container box */}
-      <div className="w-full max-w-sm bg-white rounded-xl shadow-lg p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-4">
+      {/* Modern container with better shadow and no extra padding */}
+      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden">
         {children}
         <Outlet />
       </div>
