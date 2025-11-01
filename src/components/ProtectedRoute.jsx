@@ -9,7 +9,7 @@ const ProtectedRoute = ({ requireAdmin = false }) => {
     return <div>Loading...</div>;
   }
 
-  if (!user) {
+  if (!user || user.is_banned) {
     return <Navigate to={ROUTES.LOGIN} replace />;
   }
 

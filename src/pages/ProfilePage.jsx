@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Typography,
   Space,
@@ -8,93 +8,104 @@ import {
   Button,
   Segmented,
   Divider,
+  Spin,
+  Empty,
+  message,
 } from "antd";
 import {
   UserOutlined,
   EditOutlined,
-  SettingOutlined,
   FileTextOutlined,
   HeartOutlined,
-  EyeOutlined,
 } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import PostCard from "../components/posts/PostCard";
+import { useAuth } from "../contexts/AuthContext";
+import { usePosts } from "../contexts/PostContext";
+import { actionService } from "../services/actionsService";
+import { imgService } from "../services/imgService";
+import { ROUTES } from "../constants/routes";
 
 const { Title, Text, Paragraph } = Typography;
 
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState("posts");
+  const { user, refreshUser } = useAuth(); // <- Auth context
+  const { posts, loading, fetchCurrentUserPosts, fetchAllPosts } = usePosts();
+  const navigate = useNavigate();
 
-  const userInfo = {
-    name: "Sarah Johnson",
-    username: "@sarahjohnson",
-    avatar: "https://i.pravatar.cc/150?img=1",
-    bio: "Software engineer passionate about clean code and web development. Writing about React, JavaScript, and best practices.",
-    followers: 1234,
-    following: 567,
-    totalPosts: 42,
-    totalLikes: 8945,
-    totalViews: 45678,
+  useEffect(() => {
+    // Fetch user's posts and all posts for liked posts
+    fetchCurrentUserPosts();
+    fetchAllPosts();
+  }, [fetchCurrentUserPosts, fetchAllPosts]);
+
+  // Filter posts based on active tab
+  const displayedPosts =
+    activeTab === "posts"
+      ? posts.filter((post) => post.user?.id === user?.id)
+      : posts.filter((post) => post.is_liked);
+
+  // Calculate stats
+  const userPosts = posts.filter((post) => post.user?.id === user?.id);
+  const totalPosts = userPosts.length;
+  const totalLikes = userPosts.reduce(
+    (sum, post) => sum + (post.likes || 0),
+    0,
+  );
+  const totalViews = userPosts.reduce(
+    (sum, post) => sum + (post.views || 0),
+    0,
+  );
+
+  const avatarUrl = user?.profile?.avatar
+    ? imgService.getImage(user.profile.avatar)
+    : null;
+
+  const handlePostClick = (postId) => {
+    navigate(ROUTES.POST_DETAIL(postId));
   };
 
-  const userPosts = [
-    {
-      id: 1,
-      title: "The Art of Writing Clean Code: A Developer's Journey",
-      excerpt:
-        "Writing clean code is not just about making it work—it's about crafting something that other developers can read, understand, and maintain. In this article, we explore the principles that separate good code from great code.",
-      author: "Sarah Johnson",
-      authorAvatar: "https://i.pravatar.cc/150?img=1",
-      publishDate: "Oct 20, 2025",
-      readTime: "8 min",
-      tags: ["Programming", "Best Practices"],
-      coverImage:
-        "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=300&fit=crop",
-      likes: 142,
-      comments: 23,
-    },
-    {
-      id: 8,
-      title: "10 JavaScript Tips Every Developer Should Know",
-      excerpt:
-        "From array methods to async/await patterns, these JavaScript tips will level up your coding game and make you more productive.",
-      author: "Sarah Johnson",
-      authorAvatar: "https://i.pravatar.cc/150?img=1",
-      publishDate: "Oct 15, 2025",
-      readTime: "6 min",
-      tags: ["JavaScript", "Tips"],
-      coverImage:
-        "https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=400&h=300&fit=crop",
-      likes: 256,
-      comments: 34,
-    },
-  ];
+  const handleLike = async (postId) => {
+    try {
+      await actionService.toggleLike("post", postId);
+      await fetchCurrentUserPosts();
+      await fetchAllPosts();
+      await refreshUser(); // optional: update user stats after like
+    } catch (error) {
+      console.error("Failed to like post:", error);
+      message.error("Failed to like post");
+    }
+  };
 
-  const likedPosts = [
-    {
-      id: 2,
-      title: "Understanding React Hooks: A Deep Dive",
-      excerpt:
-        "React Hooks revolutionized the way we write React components. Let's explore how useState, useEffect, and custom hooks can simplify your code and make it more reusable.",
-      author: "Michael Chen",
-      authorAvatar: "https://i.pravatar.cc/150?img=12",
-      publishDate: "Oct 18, 2025",
-      readTime: "12 min",
-      tags: ["React", "JavaScript"],
-      coverImage:
-        "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=300&fit=crop",
-      likes: 287,
-      comments: 45,
-    },
-  ];
+  const handleBookmark = async (postId) => {
+    try {
+      await actionService.toggleBookmark(postId);
+      await fetchCurrentUserPosts();
+      await fetchAllPosts();
+    } catch (error) {
+      console.error("Failed to bookmark post:", error);
+      message.error("Failed to bookmark post");
+    }
+  };
 
-  const currentPosts = activeTab === "posts" ? userPosts : likedPosts;
+  const handleEdit = (postId) => navigate(ROUTES.POST_EDIT(postId));
+  const handleEditProfile = () => navigate(ROUTES.PROFILE_EDIT);
+
+  if (!user) {
+    return (
+      <div style={{ textAlign: "center", padding: 60 }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
     <div
       style={{
         minHeight: "100vh",
         padding: "32px 20px",
-        maxWidth: "2000px",
+        maxWidth: 2000,
         margin: "0 auto",
       }}
     >
@@ -106,11 +117,13 @@ const ProfilePage = () => {
               <Row gutter={[32, 32]} align="middle">
                 <Col xs={24} sm={24} md={8} style={{ textAlign: "center" }}>
                   <Avatar
-                    size={140}
-                    src={userInfo.avatar}
+                    size={200}
+                    src={avatarUrl}
                     icon={<UserOutlined />}
                     style={{ border: "4px solid #f0f0f0" }}
-                  />
+                  >
+                    {!avatarUrl && user?.name?.[0]?.toUpperCase()}
+                  </Avatar>
                 </Col>
 
                 <Col xs={24} sm={24} md={16}>
@@ -121,10 +134,11 @@ const ProfilePage = () => {
                   >
                     <div>
                       <Title level={1} style={{ margin: 0, fontSize: 32 }}>
-                        {userInfo.name}
+                        {user?.name || "User"}
                       </Title>
                       <Text type="secondary" style={{ fontSize: 15 }}>
-                        {userInfo.username}
+                        @
+                        {user?.username || user?.email?.split("@")[0] || "user"}
                       </Text>
                     </div>
 
@@ -136,7 +150,8 @@ const ProfilePage = () => {
                         lineHeight: 1.6,
                       }}
                     >
-                      {userInfo.bio}
+                      {user?.profile?.bio ||
+                        "Welcome to my profile! Share your thoughts and connect with others."}
                     </Paragraph>
 
                     <Space size={12} wrap>
@@ -144,6 +159,7 @@ const ProfilePage = () => {
                         type="primary"
                         icon={<EditOutlined />}
                         size="large"
+                        onClick={handleEditProfile}
                         style={{
                           borderRadius: 8,
                           background:
@@ -159,7 +175,6 @@ const ProfilePage = () => {
               </Row>
 
               {/* Stats */}
-
               <Row
                 gutter={[24, 24]}
                 style={{
@@ -177,7 +192,7 @@ const ProfilePage = () => {
                     style={{ width: "100%" }}
                   >
                     <Text strong style={{ fontSize: 24 }}>
-                      {userInfo.totalPosts}
+                      {totalPosts}
                     </Text>
                     <Text type="secondary" style={{ fontSize: 13 }}>
                       Posts
@@ -192,7 +207,7 @@ const ProfilePage = () => {
                     style={{ width: "100%" }}
                   >
                     <Text strong style={{ fontSize: 24, color: "#ff4d4f" }}>
-                      {userInfo.totalLikes}
+                      {totalLikes}
                     </Text>
                     <Text type="secondary" style={{ fontSize: 13 }}>
                       Total Likes
@@ -207,7 +222,7 @@ const ProfilePage = () => {
                     style={{ width: "100%" }}
                   >
                     <Text strong style={{ fontSize: 24, color: "#1890ff" }}>
-                      {userInfo.totalViews}
+                      {totalViews}
                     </Text>
                     <Text type="secondary" style={{ fontSize: 13 }}>
                       Total Views
@@ -220,47 +235,69 @@ const ProfilePage = () => {
             <Divider />
 
             {/* Sub Navigation */}
-            <div style={{ display: "flex" }}>
-              <Segmented
-                value={activeTab}
-                onChange={setActiveTab}
-                size="large"
-                options={[
-                  {
-                    label: (
-                      <Space>
-                        <FileTextOutlined />
-                        <span>My Posts</span>
-                      </Space>
-                    ),
-                    value: "posts",
-                  },
-                  {
-                    label: (
-                      <Space>
-                        <HeartOutlined />
-                        <span>Liked</span>
-                      </Space>
-                    ),
-                    value: "liked",
-                  },
-                ]}
-                style={{
-                  padding: 4,
-                  borderRadius: 8,
-                }}
-              />
-            </div>
+            <Segmented
+              value={activeTab}
+              onChange={setActiveTab}
+              size="large"
+              options={[
+                {
+                  label: (
+                    <Space>
+                      <FileTextOutlined />
+                      My Posts ({userPosts.length})
+                    </Space>
+                  ),
+                  value: "posts",
+                },
+                {
+                  label: (
+                    <Space>
+                      <HeartOutlined />
+                      Liked ({posts.filter((p) => p.is_liked).length})
+                    </Space>
+                  ),
+                  value: "liked",
+                },
+              ]}
+              style={{ padding: 4, borderRadius: 8 }}
+            />
 
             {/* Posts List */}
             <div>
-              {currentPosts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  {...post}
-                  onClick={() => console.log("Clicked post:", post.id)}
+              {loading ? (
+                <div style={{ textAlign: "center", padding: "60px 0" }}>
+                  <Spin size="large" />
+                </div>
+              ) : displayedPosts.length === 0 ? (
+                <Empty
+                  description={
+                    activeTab === "posts"
+                      ? "No posts yet"
+                      : "No liked posts yet"
+                  }
+                  style={{ padding: "60px 0" }}
                 />
-              ))}
+              ) : (
+                displayedPosts.map((post, index) => (
+                  <PostCard
+                    key={post.id}
+                    {...post}
+                    initialLiked={post.is_liked}
+                    initialBookmarked={post.is_bookmarked}
+                    showEdit={user?.id === post.user?.id}
+                    showDelete={user?.id === post.user?.id}
+                    isLast={index === displayedPosts.length - 1}
+                    onClick={() => handlePostClick(post.id)}
+                    onLike={() => handleLike(post.id)}
+                    onBookmark={() => handleBookmark(post.id)}
+                    onComment={() => handlePostClick(post.id)}
+                    onView={() => handlePostClick(post.id)}
+                    onEdit={() => handleEdit(post.id)}
+                    onDelete={() => console.log("Delete post:", post.id)}
+                    onReport={() => console.log("Report post:", post.id)}
+                  />
+                ))
+              )}
             </div>
           </Space>
         </Col>

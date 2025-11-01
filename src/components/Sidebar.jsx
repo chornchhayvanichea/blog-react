@@ -64,13 +64,16 @@ const Sidebar = ({ darkMode }) => {
       icon: <SettingOutlined />,
       label: <Link to={ROUTES.SETTINGS}>Settings</Link>,
     },
-    {
+  ];
+
+  if (user?.role === "admin") {
+    items.push({
       key: ROUTES.ADMIN_DASHBORD,
       icon: <ToolOutlined />,
       label: "Admin Panel",
       children: [
         {
-          key: ROUTES.ADMIN_DASHBORD,
+          key: "admin-panel",
           icon: <LineChartOutlined />,
           label: <Link to={ROUTES.ADMIN_DASHBORD}>Dashboard</Link>,
         },
@@ -85,29 +88,9 @@ const Sidebar = ({ darkMode }) => {
           label: <Link to={ROUTES.ADMIN_REPORTS}>Reports List</Link>,
         },
       ],
-    },
-  ];
+    });
+  }
 
-  //  if (user?.role === "admin") {
-  //    items.push({
-  //      key: "admin-panel",
-  //      icon: <ToolOutlined />,
-  //      label: "Admin Panel",
-  //      children: [
-  //        {
-  //          key: ROUTES.ADMIN_DASHBORD,
-  //          icon: <LineChartOutlined />,
-  //          label: <Link to={ROUTES.ADMIN_DASHBORD}>Statistic</Link>,
-  //        },
-  //        {
-  //          key: ROUTES.ADMIN_REPORTS,
-  //          icon: <FlagOutlined />,
-  //          label: <Link to={ROUTES.ADMIN_REPORTS}>Report List</Link>,
-  //        },
-  //      ],
-  //    });
-  //  }
-  //
   return (
     <Sider
       style={{
@@ -129,10 +112,13 @@ const Sidebar = ({ darkMode }) => {
       <div
         className={`flex items-center ${
           collapsed ? "justify-center" : "justify-between"
-        } px-3 mt-4 mb-5`}
+        } px-3 mt-2`}
       >
         {!collapsed && (
-          <Title level={3} style={{ marginLeft: 20, color: "#1890ff" }}>
+          <Title
+            level={2}
+            style={{ marginLeft: 30, marginTop: 10, color: "#000000" }}
+          >
             Blog
           </Title>
         )}

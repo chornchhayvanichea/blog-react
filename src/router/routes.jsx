@@ -17,6 +17,7 @@ import PostDetailPage from "../pages/posts/PostDetailPage";
 import UserPostListPage from "../pages/posts/UserPostsList";
 import ManageUsersPage from "../pages/admin/ManageUsersPage";
 import CreatePostPage from "../pages/posts/CreatePostPage";
+import EditPostPage from "../pages/posts/EditPostPage";
 
 const routes = createBrowserRouter([
   {
@@ -40,12 +41,12 @@ const routes = createBrowserRouter([
     element: <MainPageLayout />,
     children: [
       {
-        path: ROUTES.HOME,
-        element: <HomePage />,
-      },
-      // Protected routes (require login only)
-      {
+        element: <ProtectedRoute />,
         children: [
+          {
+            path: ROUTES.HOME,
+            element: <HomePage />,
+          },
           {
             path: ROUTES.BOOKMARK,
             element: <BookmarksPage />,
@@ -66,8 +67,13 @@ const routes = createBrowserRouter([
             path: ROUTES.SETTINGS,
             element: <SettingPages />,
           },
+          // Edit route MUST come before detail route
           {
-            path: "/PostDetailPage",
+            path: "post/:id/edit", // Use pattern string directly
+            element: <EditPostPage />,
+          },
+          {
+            path: "post/:id", // Use pattern string directly
             element: <PostDetailPage />,
           },
         ],

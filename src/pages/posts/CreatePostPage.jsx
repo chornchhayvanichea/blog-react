@@ -1,17 +1,72 @@
-// src/pages/CreatePostPage.jsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, message } from "antd";
-import { EyeOutlined, SaveOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import PostForm from "../../components/posts/PostForm";
+import { usePosts } from "../../contexts/PostContext";
+import { actionService } from "../../services/actionsService";
+import { ROUTES } from "../../constants/routes";
+
 export default function CreatePostPage() {
-  const handlePublish = (postData) => {
-    message.success("Post published successfully!");
-    console.log("Published Post:", postData);
+  const { createPost, loading } = usePosts();
+  const navigate = useNavigate();
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await actionService.getCategories();
+        setCategories(response.categories);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+        message.error("Failed to load categories");
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  const handlePublish = async (postData) => {
+    try {
+      const formData = new FormData();
+      formData.append("title", postData.title);
+      formData.append("content", postData.content);
+      formData.append("category_id", postData.category_id);
+      formData.append("status", "published");
+
+      if (postData.fileList && postData.fileList.length > 0) {
+        formData.append("image", postData.fileList[0]);
+      }
+
+      await createPost(formData);
+      message.success("Post published successfully!");
+      navigate(ROUTES.HOME);
+    } catch (error) {
+      console.error("Failed to publish post:", error);
+      message.error(error.response?.data?.message || "Failed to publish post");
+    }
   };
 
-  const handleSaveDraft = (postData) => {
-    message.success("Draft saved!");
-    console.log("Draft Data:", postData);
+  const handleSaveDraft = async (postData) => {
+    try {
+      const formData = new FormData();
+      formData.append("title", postData.title);
+      formData.append("content", postData.content);
+      formData.append("category_id", postData.category_id);
+      formData.append("status", "draft");
+
+      if (postData.fileList && postData.fileList.length > 0) {
+        formData.append("image", postData.fileList[0]);
+      }
+
+      await createPost(formData);
+      message.success("Draft saved!");
+      navigate(ROUTES.HOME);
+    } catch (error) {
+      console.error("Failed to save draft:", error);
+      message.error(error.response?.data?.message || "Failed to save draft");
+    }
   };
 
   return (
@@ -28,7 +83,6 @@ export default function CreatePostPage() {
           margin: "0 auto",
         }}
       >
-        {/* Header */}
         <Card
           style={{
             marginBottom: 24,
@@ -47,8 +101,13 @@ export default function CreatePostPage() {
           </h1>
         </Card>
 
-        {/* Post Form */}
-        <PostForm onPublish={handlePublish} onSaveDraft={handleSaveDraft} />
+        <PostForm
+          onPublish={handlePublish}
+          onSaveDraft={handleSaveDraft}
+          loading={loading}
+          categories={categories}
+          loadingCategories={loadingCategories}
+        />
       </div>
     </div>
   );

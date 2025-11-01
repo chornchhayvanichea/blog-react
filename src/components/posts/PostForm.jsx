@@ -1,5 +1,5 @@
 // src/components/PostForm.jsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Input,
   Button,
@@ -20,11 +20,47 @@ import {
 
 const { TextArea } = Input;
 
-export default function PostForm({ onPublish, onSaveDraft }) {
+export default function PostForm({
+  initialValues = null,
+  onPublish,
+  onSaveDraft,
+  loading,
+  categories = [],
+  loadingCategories = false,
+  isEditing = false,
+}) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [category, setCategory] = useState("technology");
+  const [categoryId, setCategoryId] = useState(null);
   const [fileList, setFileList] = useState([]);
+
+  // Load initial values when editing
+  useEffect(() => {
+    if (initialValues) {
+      setTitle(initialValues.title || "");
+      setContent(initialValues.content || "");
+      setCategoryId(initialValues.category_id || null);
+
+      // If there's an existing image, add it to fileList for preview
+      if (initialValues.image) {
+        setFileList([
+          {
+            uid: "-1",
+            name: "Current Image",
+            status: "done",
+            url: initialValues.image,
+          },
+        ]);
+      }
+    }
+  }, [initialValues]);
+
+  // Set default category when categories load (only for new posts)
+  useEffect(() => {
+    if (categories.length > 0 && !categoryId && !isEditing) {
+      setCategoryId(categories[0].category_id);
+    }
+  }, [categories, categoryId, isEditing]);
 
   const uploadProps = {
     beforeUpload: (file) => {
@@ -33,6 +69,7 @@ export default function PostForm({ onPublish, onSaveDraft }) {
         message.error("You can only upload image files!");
         return false;
       }
+      // Store the actual File object for new uploads
       setFileList([file]);
       return false;
     },
@@ -48,11 +85,28 @@ export default function PostForm({ onPublish, onSaveDraft }) {
       message.error("Please add a title and content");
       return;
     }
-    onPublish({ title, content, category, fileList });
+
+    // Only pass new file uploads (File objects), not existing images
+    const newFiles = fileList.filter((file) => file instanceof File);
+
+    onPublish({
+      title,
+      content,
+      category_id: categoryId,
+      fileList: newFiles,
+    });
   };
 
   const handleSaveDraft = () => {
-    onSaveDraft({ title, content, category, fileList });
+    // Only pass new file uploads (File objects), not existing images
+    const newFiles = fileList.filter((file) => file instanceof File);
+
+    onSaveDraft({
+      title,
+      content,
+      category_id: categoryId,
+      fileList: newFiles,
+    });
   };
 
   return (
@@ -110,17 +164,18 @@ export default function PostForm({ onPublish, onSaveDraft }) {
             style={{ borderRadius: 8 }}
           >
             <Select
-              value={category}
-              onChange={setCategory}
+              value={categoryId}
+              onChange={setCategoryId}
               style={{ width: "100%" }}
               size="large"
+              loading={loadingCategories}
+              placeholder="Select a category"
             >
-              <Select.Option value="technology">Technology</Select.Option>
-              <Select.Option value="lifestyle">Lifestyle</Select.Option>
-              <Select.Option value="travel">Travel</Select.Option>
-              <Select.Option value="food">Food</Select.Option>
-              <Select.Option value="business">Business</Select.Option>
-              <Select.Option value="health">Health</Select.Option>
+              {categories.map((cat) => (
+                <Select.Option key={cat.category_id} value={cat.category_id}>
+                  {cat.category_name}
+                </Select.Option>
+              ))}
             </Select>
           </Card>
         </Col>
@@ -143,7 +198,9 @@ export default function PostForm({ onPublish, onSaveDraft }) {
                 block
                 style={{ height: 40 }}
               >
-                Choose Image
+                {isEditing && initialValues?.image
+                  ? "Change Image"
+                  : "Choose Image"}
               </Button>
             </Upload>
           </Card>
@@ -159,11 +216,16 @@ export default function PostForm({ onPublish, onSaveDraft }) {
           marginTop: 24,
         }}
       >
-        <Button size="large" onClick={handleSaveDraft}>
-          Save Draft
+        <Button size="large" onClick={handleSaveDraft} loading={loading}>
+          {isEditing ? "Update Draft" : "Save Draft"}
         </Button>
-        <Button type="primary" size="large" onClick={handlePublish}>
-          Publish
+        <Button
+          type="primary"
+          size="large"
+          onClick={handlePublish}
+          loading={loading}
+        >
+          {isEditing ? "Update & Publish" : "Publish"}
         </Button>
       </Space>
     </>

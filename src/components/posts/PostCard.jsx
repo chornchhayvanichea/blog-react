@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  Card,
   Avatar,
   Typography,
   Space,
@@ -12,7 +11,6 @@ import {
   Dropdown,
 } from "antd";
 import {
-  ClockCircleOutlined,
   UserOutlined,
   HeartOutlined,
   HeartFilled,
@@ -25,27 +23,31 @@ import {
   FlagOutlined,
   EyeOutlined,
 } from "@ant-design/icons";
-
+import { imgService } from "../../services/imgService";
+import { actionService } from "../../services/actionsService";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../constants/routes";
+import ReportModal from "../reports/ReportModal";
 const { Text, Title, Paragraph } = Typography;
 
 const PostCard = ({
+  id,
+  user,
+  category,
   title,
-  excerpt,
-  author,
-  authorAvatar,
-  publishDate,
-  readTime,
-  tags = [],
-  coverImage,
+  content,
+  image,
   likes = 0,
   comments = 0,
+  bookmarks = 0,
+  views = 0,
+  created_at,
   onClick,
   onLike,
-  bookmarks,
   onBookmark,
-  initialBookmarked = false,
   onComment,
   initialLiked = false,
+  initialBookmarked = false,
   isLast = false,
   onEdit,
   onDelete,
@@ -54,25 +56,67 @@ const PostCard = ({
   showEdit = true,
   showDelete = true,
 }) => {
+  const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(initialLiked);
   const [likeCount, setLikeCount] = useState(likes);
   const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
   const [bookmarkCount, setBookmarkCount] = useState(bookmarks);
+  const [viewCount, setViewCount] = useState(views);
+  const [reportModalVisible, setReportModalVisible] = useState(false);
 
-  const handleBookmark = (e) => {
-    e.stopPropagation();
-    const newBookmarkState = !isBookmarked;
-    setIsBookmarked(newBookmarkState);
-    setBookmarkCount(newBookmarkState ? bookmarkCount + 1 : bookmarkCount - 1);
-    onBookmark?.(newBookmarkState);
+  const avatarUrl = user?.avatar ? imgService.getImage(user.avatar) : null;
+  const coverImageUrl = image ? imgService.getImage(image) : null;
+
+  const formatRelativeTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}min ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    const weeks = Math.floor(days / 7);
+    if (weeks < 4) return `${weeks}w ago`;
+    const months = Math.floor(days / 30);
+    if (months < 12) return `${months}mo ago`;
+    const years = Math.floor(days / 365);
+    return `${years}y ago`;
+  };
+
+  const formatViewCount = (count) => {
+    if (count < 1000) return count.toString();
+    if (count < 1000000) return `${(count / 1000).toFixed(1)}k`;
+    return `${(count / 1000000).toFixed(1)}m`;
+  };
+
+  const handleCardClick = async () => {
+    try {
+      const newViews = await actionService.postViews(id);
+      setViewCount(newViews);
+    } catch (err) {
+      console.error("Failed to increment views:", err);
+    }
+    onClick?.();
   };
 
   const handleLike = (e) => {
     e.stopPropagation();
-    const newLikedState = !isLiked;
-    setIsLiked(newLikedState);
-    setLikeCount(newLikedState ? likeCount + 1 : likeCount - 1);
-    onLike?.(newLikedState);
+    const newLiked = !isLiked;
+    setIsLiked(newLiked);
+    setLikeCount(newLiked ? likeCount + 1 : likeCount - 1);
+    onLike?.(newLiked);
+  };
+
+  const handleBookmark = (e) => {
+    e.stopPropagation();
+    const newBookmarked = !isBookmarked;
+    setIsBookmarked(newBookmarked);
+    setBookmarkCount(newBookmarked ? bookmarkCount + 1 : bookmarkCount - 1);
+    onBookmark?.(newBookmarked);
   };
 
   const handleComment = (e) => {
@@ -80,7 +124,6 @@ const PostCard = ({
     onComment?.();
   };
 
-  // Dropdown menu items
   const menuItems = [
     {
       key: "view",
@@ -97,6 +140,7 @@ const PostCard = ({
       icon: <EditOutlined />,
       onClick: (e) => {
         e.domEvent.stopPropagation();
+        navigate(ROUTES.EDIT_POST(id));
         onEdit?.();
       },
     },
@@ -110,16 +154,15 @@ const PostCard = ({
         onDelete?.();
       },
     },
-    {
-      type: "divider",
-    },
+    { type: "divider" },
     {
       key: "report",
       label: "Report",
       icon: <FlagOutlined />,
       onClick: (e) => {
         e.domEvent.stopPropagation();
-        onReport?.();
+        console.log("Report post:", id);
+        setReportModalVisible(true); // Add this line
       },
     },
   ].filter(Boolean);
@@ -127,34 +170,34 @@ const PostCard = ({
   return (
     <div>
       <div
-        onClick={onClick}
-        style={{
-          padding: "20px 0",
-          cursor: "pointer",
-          transition: "all 0.2s ease",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "#fafafa";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "transparent";
-        }}
+        onClick={handleCardClick}
+        style={{ padding: "20px 0", cursor: "pointer", transition: "all 0.2s" }}
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.backgroundColor = "#fafafa")
+        }
+        onMouseLeave={(e) =>
+          (e.currentTarget.style.backgroundColor = "transparent")
+        }
       >
         <Row gutter={16}>
-          {coverImage && (
+          {coverImageUrl && (
             <Col xs={24} sm={8} md={8}>
               <div
                 style={{
                   width: "100%",
                   height: "180px",
-                  background: `url(${coverImage}) center/cover`,
+                  background: `url(${coverImageUrl}) center/cover`,
                   borderRadius: "8px",
                 }}
               />
             </Col>
           )}
 
-          <Col xs={24} sm={coverImage ? 16 : 24} md={coverImage ? 16 : 24}>
+          <Col
+            xs={24}
+            sm={coverImageUrl ? 16 : 24}
+            md={coverImageUrl ? 16 : 24}
+          >
             <Space direction="vertical" size={12} style={{ width: "100%" }}>
               <div
                 style={{
@@ -163,24 +206,19 @@ const PostCard = ({
                   alignItems: "flex-start",
                 }}
               >
-                {tags.length > 0 && (
-                  <Space size={6} wrap>
-                    {tags.slice(0, 2).map((tag, index) => (
-                      <Tag
-                        key={index}
-                        color="blue"
-                        style={{
-                          borderRadius: 4,
-                          fontSize: 11,
-                          fontWeight: 600,
-                          padding: "2px 8px",
-                          border: "none",
-                        }}
-                      >
-                        {tag.toUpperCase()}
-                      </Tag>
-                    ))}
-                  </Space>
+                {category?.name && (
+                  <Tag
+                    color="blue"
+                    style={{
+                      borderRadius: 4,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      padding: "2px 8px",
+                      border: "none",
+                    }}
+                  >
+                    {category.name.toUpperCase()}
+                  </Tag>
                 )}
 
                 <Dropdown
@@ -193,10 +231,7 @@ const PostCard = ({
                     size="small"
                     icon={<MoreOutlined />}
                     onClick={(e) => e.stopPropagation()}
-                    style={{
-                      marginLeft: "auto",
-                      color: "#999",
-                    }}
+                    style={{ marginLeft: "auto", color: "#999" }}
                   />
                 </Dropdown>
               </div>
@@ -223,7 +258,7 @@ const PostCard = ({
                   lineHeight: 1.6,
                 }}
               >
-                {excerpt}
+                {content}
               </Paragraph>
 
               <div
@@ -236,11 +271,9 @@ const PostCard = ({
                 }}
               >
                 <Space size={8} align="center">
-                  <Avatar
-                    src={authorAvatar}
-                    size={32}
-                    icon={<UserOutlined />}
-                  />
+                  <Avatar src={avatarUrl} size={32} icon={<UserOutlined />}>
+                    {!avatarUrl && user?.name?.[0]?.toUpperCase()}
+                  </Avatar>
                   <div>
                     <Text
                       strong
@@ -250,21 +283,19 @@ const PostCard = ({
                         lineHeight: 1.3,
                       }}
                     >
-                      {author}
+                      {user?.name || "Unknown User"}
                     </Text>
                     <Text type="secondary" style={{ fontSize: 12 }}>
-                      {publishDate}
+                      {formatRelativeTime(created_at)}
                     </Text>
                   </div>
                 </Space>
 
                 <Space size={16}>
                   <Space size={4}>
-                    <ClockCircleOutlined
-                      style={{ fontSize: 12, color: "#999" }}
-                    />
+                    <EyeOutlined style={{ fontSize: 12, color: "#999" }} />
                     <Text type="secondary" style={{ fontSize: 12 }}>
-                      {readTime}
+                      {formatViewCount(viewCount)}
                     </Text>
                   </Space>
 
@@ -279,13 +310,6 @@ const PostCard = ({
                         <HeartOutlined style={{ color: "#999" }} />
                       )
                     }
-                    style={{
-                      padding: "0 4px",
-                      height: "auto",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                    }}
                   >
                     <Text
                       style={{
@@ -303,41 +327,28 @@ const PostCard = ({
                     size="small"
                     onClick={handleComment}
                     icon={<MessageOutlined style={{ color: "#999" }} />}
-                    style={{
-                      padding: "0 4px",
-                      height: "auto",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                    }}
                   >
                     <Text style={{ fontSize: 12, color: "#999" }}>
                       {comments}
                     </Text>
                   </Button>
+
                   <Button
                     type="text"
                     size="small"
                     onClick={handleBookmark}
                     icon={
                       isBookmarked ? (
-                        <BookFilled style={{ color: "#ff4d4f" }} />
+                        <BookFilled style={{ color: "#1890ff" }} />
                       ) : (
                         <BookOutlined style={{ color: "#999" }} />
                       )
                     }
-                    style={{
-                      padding: "0 4px",
-                      height: "auto",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                    }}
                   >
                     <Text
                       style={{
                         fontSize: 12,
-                        color: isBookmarked ? "#ff4d4f" : "#999",
+                        color: isBookmarked ? "#1890ff" : "#999",
                         fontWeight: isBookmarked ? 600 : 400,
                       }}
                     >
@@ -351,6 +362,12 @@ const PostCard = ({
         </Row>
       </div>
       {!isLast && <Divider style={{ margin: 0 }} />}
+      <ReportModal
+        visible={reportModalVisible}
+        onClose={() => setReportModalVisible(false)}
+        postId={id}
+        type="post"
+      />{" "}
     </div>
   );
 };

@@ -11,16 +11,21 @@ const SignupForm = () => {
 
   const onFinish = async (values) => {
     try {
-      await signup(values.email, values.username, values.password);
+      await signup({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        password_confirmation: values.confirmPassword,
+      });
       message.success("Account created successfully!");
       navigate(ROUTES.HOME || "/");
     } catch (error) {
+      console.log("Signup error:", error.response?.data); // ← Log it here
       message.error(
         error.response?.data?.message || "Failed to create account",
       );
     }
   };
-
   return (
     <div
       style={{
@@ -165,7 +170,7 @@ const SignupForm = () => {
               </Form.Item>
 
               <Form.Item
-                name="username"
+                name="name"
                 rules={[
                   { required: true, message: "Please input your Username!" },
                   {

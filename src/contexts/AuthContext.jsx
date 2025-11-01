@@ -1,81 +1,87 @@
+// src/contexts/AuthContext.js
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { authService } from "../services/authService";
 import {
   setToken,
-  clearAuthData,
   getToken,
-  setUser as saveUser,
+  setUser,
   getUser,
+  clearAuthData,
 } from "../utils/localStorage";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // ⬅️ Start with true
+  const [user, setUserState] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // ⬅️ Load user on mount
+  // Initialize auth on mount
+  // Initialize auth on mount
   useEffect(() => {
     const initAuth = async () => {
       const token = getToken();
-      const savedUser = getUser(); // Get from localStorage
+      if (!token) return setLoading(false);
 
-      if (token && savedUser) {
-        // User data exists in localStorage
-        setUser(savedUser);
-        setLoading(false);
-      } else if (token) {
-        // Token exists but no user data - fetch it
-        try {
-          const userData = await authService.getCurrentUser();
-          saveUser(userData);
-          setUser(userData);
-        } catch (error) {
-          // Token invalid - clear it
+      const savedUser = getUser();
+      if (savedUser) {
+        setUserState(savedUser); // Use cached user
+        setLoading(false); // ✅ Set loading false here
+      }
+
+      // Try to refresh in background
+      try {
+        const userData = await authService.currentUserProfile();
+        setUserState(userData);
+        setUser(userData);
+      } catch (error) {
+        console.error("Failed to fetch current user:", error);
+        // Only clear if 401 (token invalid)
+        if (error.response?.status === 401) {
           clearAuthData();
+          setUserState(null);
         }
-        setLoading(false);
-      } else {
-        // No token
+        // Otherwise keep using cached user
+      } finally {
         setLoading(false);
       }
     };
-
     initAuth();
   }, []);
 
+  // Login
   const login = async (email, password) => {
     setLoading(true);
     try {
       const data = await authService.login(email, password);
-      setToken(data.access_token);
-
-      const userData = await authService.getCurrentUser();
-      saveUser(userData); // ⬅️ Save to localStorage
-      setUser(userData);
-
+      setToken(data.token);
+      setUser(data.user); // save to localStorage
+      setUserState(data.user);
       return data;
     } finally {
       setLoading(false);
     }
   };
 
-  const signup = async (userData) => {
+  // Signup
+  const signup = async ({ email, name, password, password_confirmation }) => {
     setLoading(true);
     try {
-      const data = await authService.signup(userData);
-      setToken(data.access_token);
-
-      const user = await authService.getCurrentUser();
-      saveUser(user); // ⬅️ Save to localStorage
-      setUser(user);
-
+      const data = await authService.signup({
+        email,
+        name,
+        password,
+        password_confirmation,
+      });
+      setToken(data.token);
+      setUser(data.user);
+      setUserState(data.user);
       return data;
     } finally {
       setLoading(false);
     }
   };
 
+  // Logout
   const logout = async () => {
     try {
       await authService.logout();
@@ -83,22 +89,35 @@ export const AuthProvider = ({ children }) => {
       console.error("Logout error:", error);
     } finally {
       clearAuthData();
-      setUser(null);
-      window.location.href = "/auth/login";
+      setUserState(null);
     }
   };
 
+  // Refresh user profile
+  const refreshUser = async () => {
+    try {
+      const userData = await authService.currentUserProfile();
+      setUserState(userData);
+      setUser(userData);
+      return userData;
+    } catch (error) {
+      console.error("Failed to refresh user:", error);
+      // ❌ DON'T clear auth data on refresh failure
+      // Only logout if it's a 401 (unauthorized) error
+      if (error.response?.status === 401) {
+        clearAuthData();
+        setUserState(null);
+      }
+      throw error; // Re-throw so caller knows it failed
+    }
+  };
   return (
-    <AuthContext.Provider value={{ user, login, logout, signup, loading }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, signup, logout, refreshUser }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);

@@ -1,6 +1,6 @@
 import axios from "axios";
 import API_ENDPOINTS from "../constants/apiEndPoints";
-import { clearAuthData, getToken } from "../utils/localStorage";
+import { getToken } from "../utils/localStorage";
 
 const api = axios.create({
   baseURL: API_ENDPOINTS.BASE,
@@ -17,12 +17,12 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error),
 );
 
-// Remove response interceptor for now - let components handle errors
-// We'll add it back later if needed
+api.interceptors.response.use(
+  (response) => response,
+  (error) => Promise.reject(error),
+);
 
 export default api;

@@ -8,8 +8,19 @@ export const authService = {
       email,
       password,
     });
+
+    console.log("Login response:", response.data);
+
     const { data } = response.data;
-    const { user, access_token, token_type, expires_in } = data;
+    const { user, access_token, token_type, expires_in } = data; // Don't extract profile here
+
+    console.log("Formatted user object:", {
+      name: user.name,
+      email: user.email,
+      id: user.id,
+      profile: user.profile, // Get profile from user object
+    });
+
     return {
       message: response.data.message,
       token: access_token,
@@ -17,31 +28,43 @@ export const authService = {
         name: user.name,
         email: user.email,
         id: user.id,
+        role: user.role,
+        profile: {
+          avatar: user.profile?.avatar, // Changed from profile?.avatar to user.profile?.avatar
+          bio: user.profile?.bio, // Changed from profile?.bio to user.profile?.bio
+        },
+      },
+      tokenType: token_type,
+      expiresIn: expires_in,
+    };
+  },
+  signup: async ({ email, name, password, password_confirmation }) => {
+    const payload = { email, name, password, password_confirmation };
+    const response = await api.post(API_ENDPOINTS.AUTH.SIGNUP, payload);
+    const { data } = response.data;
+    const { user, access_token, token_type, expires_in } = data;
+
+    return {
+      message: response.data.message,
+      token: access_token,
+      user: {
+        name: user.name,
+        email: user.email,
+        id: user.id,
+        is_banned: user.is_banned,
+        role: user.role, // ← Add this too
+        profile: {
+          avatar: user.profile?.avatar || null, // ← Fixed
+          bio: user.profile?.bio || null, // ← Fixed
+        },
       },
       tokenType: token_type,
       expiresIn: expires_in,
     };
   },
 
-  signup: async (userData) => {
-    const response = await api.post(API_ENDPOINTS.AUTH.SIGNUP, userData);
-    const { data } = response.data;
-    const { user } = response.data.data;
-    return {
-      message: response.data.message,
-      token: data.access_token,
-      user: {
-        name: user.name,
-        email: user.email,
-        id: user.id,
-      },
-      tokenType: data.token_type,
-      expiresIn: data.expires_in,
-    };
-  },
-
   currentUserProfile: async () => {
-    const response = await api.get(API_ENDPOINTS.USER.CURRENT);
+    const response = await api.get(API_ENDPOINTS.USER.SHOW);
     const { user } = response.data.data; // ts equals to response.data.data.user
     return {
       message: response.data.message,

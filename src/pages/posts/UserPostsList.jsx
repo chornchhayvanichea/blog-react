@@ -1,68 +1,78 @@
-import React, { useState } from "react";
-import { Space, Row, Col, Typography, Divider, Segmented } from "antd";
+import React, { useState, useEffect } from "react";
+import {
+  Space,
+  Row,
+  Col,
+  Typography,
+  Divider,
+  Segmented,
+  Spin,
+  Empty,
+  message,
+} from "antd";
 import {
   BookOutlined,
   EditOutlined,
   CheckCircleOutlined,
 } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import PostCard from "../../components/posts/PostCard";
+import { usePosts } from "../../contexts/PostContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { actionService } from "../../services/actionsService";
+import { ROUTES } from "../../constants/routes";
 
 const UserPostsList = () => {
   const { Title, Text } = Typography;
   const [postStatus, setPostStatus] = useState("published");
+  const { posts, loading, fetchCurrentUserPosts } = usePosts();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const allPosts = [
-    {
-      id: 1,
-      title: "The Art of Writing Clean Code: A Developer's Journey",
-      excerpt:
-        "Writing clean code is not just about making it work—it's about crafting something that other developers can read, understand, and maintain. In this article, we explore the principles that separate good code from great code.",
-      author: "Sarah Johnson",
-      authorAvatar: "https://i.pravatar.cc/150?img=1",
-      publishDate: "Oct 20, 2025",
-      readTime: "8 min",
-      tags: ["Programming", "Best Practices"],
-      coverImage:
-        "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=300&fit=crop",
-      likes: 142,
-      comments: 23,
-      status: "published",
-    },
-    {
-      id: 8,
-      title: "10 JavaScript Tips Every Developer Should Know",
-      excerpt:
-        "From array methods to async/await patterns, these JavaScript tips will level up your coding game and make you more productive.",
-      author: "Sarah Johnson",
-      authorAvatar: "https://i.pravatar.cc/150?img=1",
-      publishDate: "Oct 15, 2025",
-      readTime: "6 min",
-      tags: ["JavaScript", "Tips"],
-      coverImage:
-        "https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=400&h=300&fit=crop",
-      likes: 256,
-      comments: 34,
-      status: "published",
-    },
-    {
-      id: 9,
-      title: "Building a Scalable Backend Architecture",
-      excerpt:
-        "Learn the fundamentals of designing backend systems that can handle millions of users while maintaining performance and reliability.",
-      author: "Sarah Johnson",
-      authorAvatar: "https://i.pravatar.cc/150?img=1",
-      publishDate: "Draft",
-      readTime: "15 min",
-      tags: ["Backend", "Architecture"],
-      coverImage:
-        "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=400&h=300&fit=crop",
-      likes: 0,
-      comments: 0,
-      status: "draft",
-    },
-  ];
+  useEffect(() => {
+    fetchCurrentUserPosts();
+  }, [fetchCurrentUserPosts]);
 
-  const currentPosts = allPosts.filter((post) => post.status === postStatus);
+  // Debug: Log the posts data
+  useEffect(() => {
+    console.log("Posts data:", posts);
+    if (posts.length > 0) {
+      console.log("First post structure:", posts[0]);
+    }
+  }, [posts]);
+
+  // Filter posts based on selected status
+  const currentPosts = posts.filter((post) => post.status === postStatus);
+
+  const handlePostClick = (postId) => {
+    navigate(ROUTES.POST_DETAIL(postId));
+  };
+
+  const handleLike = async (postId) => {
+    try {
+      await actionService.toggleLike("post", postId);
+    } catch (error) {
+      console.error("Failed to like post:", error);
+      message.error("Failed to like post");
+    }
+  };
+
+  const handleBookmark = async (postId) => {
+    try {
+      await actionService.toggleBookmark(postId);
+    } catch (error) {
+      console.error("Failed to bookmark post:", error);
+      message.error("Failed to bookmark post");
+    }
+  };
+
+  const handleEdit = (postId) => {
+    navigate(ROUTES.POST_EDIT(postId));
+  };
+
+  const handleDelete = async (postId) => {
+    console.log("Delete post:", postId);
+  };
 
   return (
     <div
@@ -99,7 +109,14 @@ const UserPostsList = () => {
                       label: (
                         <Space>
                           <CheckCircleOutlined />
-                          <span>Published</span>
+                          <span>
+                            Published (
+                            {
+                              posts.filter((p) => p.status === "published")
+                                .length
+                            }
+                            )
+                          </span>
                         </Space>
                       ),
                       value: "published",
@@ -108,7 +125,10 @@ const UserPostsList = () => {
                       label: (
                         <Space>
                           <EditOutlined />
-                          <span>Draft</span>
+                          <span>
+                            Draft (
+                            {posts.filter((p) => p.status === "draft").length})
+                          </span>
                         </Space>
                       ),
                       value: "draft",
@@ -123,16 +143,40 @@ const UserPostsList = () => {
 
               {/* Posts List */}
               <div>
-                {currentPosts.map((post, index) => (
-                  <PostCard
-                    key={post.id}
-                    {...post}
-                    isLast={index === currentPosts.length - 1}
-                    onClick={() => console.log("Clicked post:", post.id)}
-                    onLike={(liked) => console.log("Liked:", liked)}
-                    onComment={() => console.log("Comment clicked")}
+                {loading ? (
+                  <div style={{ textAlign: "center", padding: "60px 0" }}>
+                    <Spin size="large" />
+                  </div>
+                ) : currentPosts.length === 0 ? (
+                  <Empty
+                    description={
+                      postStatus === "published"
+                        ? "No published posts yet"
+                        : "No drafts yet"
+                    }
+                    style={{ padding: "60px 0" }}
                   />
-                ))}
+                ) : (
+                  currentPosts.map((post, index) => (
+                    <PostCard
+                      key={post.id}
+                      {...post}
+                      initialLiked={post.is_liked}
+                      initialBookmarked={post.is_bookmarked}
+                      showEdit={user?.id === post.user?.id}
+                      showDelete={user?.id === post.user?.id}
+                      isLast={index === currentPosts.length - 1}
+                      onClick={() => handlePostClick(post.id)}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onComment={() => handlePostClick(post.id)}
+                      onView={() => handlePostClick(post.id)}
+                      onEdit={() => handleEdit(post.id)}
+                      onDelete={() => handleDelete(post.id)}
+                      onReport={() => console.log("Report post:", post.id)}
+                    />
+                  ))
+                )}
               </div>
             </Space>
           </Col>

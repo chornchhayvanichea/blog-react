@@ -1,7 +1,14 @@
 import React from "react";
-import { Card, Space, Avatar, Button, Tag, Typography } from "antd";
-import { HeartOutlined } from "@ant-design/icons";
-
+import { Card, Space, Avatar, Button, Tag, Typography, Dropdown } from "antd";
+import {
+  HeartOutlined,
+  HeartFilled, // Add this import
+  MoreOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  FlagOutlined,
+} from "@ant-design/icons";
+import { imgService } from "../../services/imgService";
 const { Text, Paragraph } = Typography;
 
 export default function CommentItem({
@@ -10,7 +17,47 @@ export default function CommentItem({
   isReply = false,
   onReply,
   onLike,
+  onEdit,
+  onDelete,
+  onReport,
+  currentUserId,
 }) {
+  // Check if current user owns this comment
+  const isOwner = currentUserId && comment.userId === currentUserId;
+
+  // Create menu items based on ownership
+  const getMenuItems = () => {
+    if (isOwner) {
+      // Owner can edit and delete
+      return [
+        {
+          key: "edit",
+          label: "Edit",
+          icon: <EditOutlined />,
+          onClick: () => onEdit?.(comment),
+        },
+        {
+          key: "delete",
+          label: "Delete",
+          icon: <DeleteOutlined />,
+          danger: true,
+          onClick: () => onDelete?.(comment.id),
+        },
+      ];
+    } else {
+      // Non-owner can only report
+      return [
+        {
+          key: "report",
+          label: "Report",
+          icon: <FlagOutlined />,
+          danger: true,
+          onClick: () => onReport?.(comment.id),
+        },
+      ];
+    }
+  };
+
   return (
     <Card
       type="inner"
@@ -25,29 +72,65 @@ export default function CommentItem({
       }
     >
       <Space direction="vertical" size="small" style={{ width: "100%" }}>
-        <Space>
-          <Avatar src={comment.avatar} />
-          <div>
-            <Text strong>{comment.name}</Text>
-            {isAuthor && (
-              <Tag color="blue" style={{ marginLeft: "8px" }}>
-                Author
-              </Tag>
-            )}
-            <br />
-            <Text type="secondary" style={{ fontSize: "12px" }}>
-              {comment.time}
-            </Text>
-          </div>
-        </Space>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+          }}
+        >
+          <Space>
+            <Avatar
+              src={comment.avatar || null}
+              alt={comment.name}
+              style={{
+                backgroundColor: !comment.avatar ? "#f56a00" : undefined,
+                verticalAlign: "middle",
+              }}
+            >
+              {!comment.avatar && comment.name?.[0]?.toUpperCase()}
+            </Avatar>
+
+            <div>
+              <Text strong>{comment.name}</Text>
+              {isAuthor}
+              <br />
+              <Text type="secondary" style={{ fontSize: "12px" }}>
+                {comment.time}
+              </Text>
+            </div>
+          </Space>
+
+          {/* Three-dot menu */}
+          <Dropdown
+            menu={{ items: getMenuItems() }}
+            trigger={["click"]}
+            placement="bottomRight"
+          >
+            <Button
+              type="text"
+              icon={<MoreOutlined />}
+              size="small"
+              style={{ marginTop: "-8px" }}
+            />
+          </Dropdown>
+        </div>
+
         <Paragraph style={{ marginLeft: "48px", marginBottom: "8px" }}>
           {comment.text}
         </Paragraph>
+
         <Space style={{ marginLeft: "48px" }}>
           <Button
             type="text"
             size="small"
-            icon={<HeartOutlined />}
+            icon={
+              comment.isLiked ? (
+                <HeartFilled style={{ color: "#ff4d4f" }} />
+              ) : (
+                <HeartOutlined />
+              )
+            }
             onClick={() => onLike?.(comment.id)}
           >
             {comment.likes}
@@ -72,6 +155,10 @@ export default function CommentItem({
                 isReply={true}
                 onReply={onReply}
                 onLike={onLike}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onReport={onReport}
+                currentUserId={currentUserId}
               />
             ))}
           </div>

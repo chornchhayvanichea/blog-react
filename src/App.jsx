@@ -3,6 +3,7 @@ import routes from "./router/routes";
 import { ConfigProvider } from "antd";
 import { theme } from "antd";
 import { AuthProvider } from "./contexts/AuthContext";
+import PostProvider from "./contexts/PostContext";
 import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 
 function AppContent() {
@@ -36,9 +37,11 @@ function AppContent() {
         },
       }}
     >
-      <AuthProvider>
-        <RouterProvider router={routes} />
-      </AuthProvider>
+      <PostProvider>
+        <AuthProvider>
+          <RouterProvider router={routes} />
+        </AuthProvider>
+      </PostProvider>
     </ConfigProvider>
   );
 }
