@@ -1,1 +1,1 @@
-i suffer a lot on this
+frontend for blog-api
